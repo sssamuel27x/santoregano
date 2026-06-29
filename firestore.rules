@@ -6,7 +6,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email == 'samuelmau2008@gmail.com';
+        && request.auth.token.email in [
+          'samuelmau2008@gmail.com',
+          'pizzariasantoregano@gmail.com'
+        ];
     }
   }
 }

@@ -7,10 +7,13 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase';
 
-const ADMIN_EMAIL = 'samuelmau2008@gmail.com';
+const ADMIN_EMAILS = [
+  'samuelmau2008@gmail.com',
+  'pizzariasantoregano@gmail.com',
+];
 const AdminContext = createContext(null);
 
-const isAdmin = (user) => user?.email?.toLowerCase() === ADMIN_EMAIL;
+const isAdmin = (user) => ADMIN_EMAILS.includes(user?.email?.toLowerCase());
 
 export function AdminProvider({ children }) {
   const [user, setUser] = useState(null);

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-const restaurantPhoto = '/restaurant.jpg';
+const restaurantPhoto = '/storefront-hero.png';
 
 export default function Home() {
   return (

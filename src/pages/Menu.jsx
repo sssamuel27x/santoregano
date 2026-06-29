@@ -1,41 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { euro } from '../data/menu';
+import { euro, stuffedCrusts } from '../data/menu';
 import { useCart } from '../context/CartContext';
 import { useMenu } from '../context/MenuContext';
-
-const stuffedCrusts = [
-  { id: 'catupiry', name: 'Catupiry', price: 6 },
-  { id: 'mozzarella', name: 'Mozzarella', price: 5 },
-  { id: 'cream-cheese', name: 'Cream Cheese', price: 8 },
-  { id: 'brigadeiro', name: 'Brigadeiro', price: 6 },
-];
+import { hideBrokenImage, menuImage, showLoadedImage } from '../utils/menuImages';
 
 const roundCurrency = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
-const menuImageAliases = {
-  'agua-15': 'agua-500',
-  frize: 'pedras',
-  'coca-zero': 'coca',
-  'coca-1l': 'coca-vidro',
-  'cerveja-330': 'cerveja-mini',
-  carlsberg: 'cerveja-mini',
-  heineken: 'cerveja-mini',
-};
-const menuImage = (product) => `/menu-images/${menuImageAliases[product.id] || product.id}.jpg`;
 
 function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
   const { addConfiguredPizza } = useCart();
   const [halfAndHalf, setHalfAndHalf] = useState(false);
   const [secondId, setSecondId] = useState('');
   const [crustId, setCrustId] = useState('');
+  const [primaryChoiceId, setPrimaryChoiceId] = useState('');
+  const [secondChoiceId, setSecondChoiceId] = useState('');
   const secondFlavor = pizzas.find((pizza) => pizza.id === secondId) || null;
   const crust = stuffedCrusts.find((item) => item.id === crustId) || null;
+  const primaryChoice = product.choice?.options.find((item) => item.id === primaryChoiceId) || null;
+  const secondChoice = secondFlavor?.choice?.options.find((item) => item.id === secondChoiceId) || null;
   const sizeInfo = product.sizes[size];
   const flavorPrice = secondFlavor
     ? (sizeInfo.price / 2) + (secondFlavor.sizes[size].price / 2)
     : sizeInfo.price;
   const total = roundCurrency(flavorPrice + (crust?.price || 0));
+  const missingRequiredChoice = (product.choice && !primaryChoice)
+    || (halfAndHalf && secondFlavor?.choice && !secondChoice);
+  const cannotAdd = (halfAndHalf && !secondFlavor) || missingRequiredChoice;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -48,9 +39,21 @@ function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
     };
   }, [onClose]);
 
+  useEffect(() => {
+    setSecondChoiceId('');
+  }, [secondId]);
+
   const addPizza = () => {
-    if (halfAndHalf && !secondFlavor) return;
-    addConfiguredPizza({ product, size, secondFlavor: halfAndHalf ? secondFlavor : null, crust, price: total });
+    if (cannotAdd) return;
+    addConfiguredPizza({
+      product,
+      size,
+      secondFlavor: halfAndHalf ? secondFlavor : null,
+      crust,
+      primaryChoice,
+      secondChoice: halfAndHalf ? secondChoice : null,
+      price: total,
+    });
     onAdded(halfAndHalf && secondFlavor ? `${product.name} + ${secondFlavor.name}` : product.name);
     onClose();
   };
@@ -60,8 +63,8 @@ function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
       <section className="pizza-config" role="dialog" aria-modal="true" aria-labelledby="pizza-config-title">
         <header className="pizza-config-header">
           <div className="pizza-config-hero" aria-hidden="true">
-            <span>{product.emoji}</span>
-            <img src={menuImage(product)} alt="" onError={(event) => { event.currentTarget.hidden = true; }} />
+            <img src={menuImage(product)} alt="" onLoad={showLoadedImage} onError={hideBrokenImage} />
+            <span>Sem imagem</span>
           </div>
           <div>
             <p className="eyebrow">Personalize a sua pizza</p>
@@ -101,6 +104,32 @@ function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
                 )}
               </label>
             )}
+            {(product.choice || (halfAndHalf && secondFlavor?.choice)) && (
+              <div className="pizza-choice-fields">
+                {product.choice && (
+                  <label className="pizza-second-flavor">
+                    {halfAndHalf ? `Opção para ½ ${product.name}` : product.choice.label}
+                    <select value={primaryChoiceId} onChange={(event) => setPrimaryChoiceId(event.target.value)}>
+                      <option value="">Escolha uma opção…</option>
+                      {product.choice.options.map((option) => (
+                        <option key={option.id} value={option.id}>{option.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {halfAndHalf && secondFlavor?.choice && (
+                  <label className="pizza-second-flavor">
+                    Opção para ½ {secondFlavor.name}
+                    <select value={secondChoiceId} onChange={(event) => setSecondChoiceId(event.target.value)}>
+                      <option value="">Escolha uma opção…</option>
+                      {secondFlavor.choice.options.map((option) => (
+                        <option key={option.id} value={option.id}>{option.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+            )}
           </section>
 
           <section className="pizza-config-block">
@@ -121,11 +150,72 @@ function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
         <footer className="pizza-config-footer">
           <div>
             <span>Total desta pizza</span>
-            <strong>{halfAndHalf && !secondFlavor ? '—' : euro(total)}</strong>
+            <strong>{cannotAdd ? '—' : euro(total)}</strong>
           </div>
-          <button type="button" disabled={halfAndHalf && !secondFlavor} onClick={addPizza}>
+          <button type="button" disabled={cannotAdd} onClick={addPizza}>
             Adicionar ao carrinho <span>→</span>
           </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
+function ProductChoiceConfigurator({ product, onClose, onAdded }) {
+  const { addItem } = useCart();
+  const [choiceId, setChoiceId] = useState('');
+  const choice = product.choice.options.find((option) => option.id === choiceId) || null;
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event) => event.key === 'Escape' && onClose();
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [onClose]);
+
+  const addProduct = () => {
+    if (!choice) return;
+    addItem(product, null, choice);
+    onAdded(`${product.name} (${choice.name})`);
+    onClose();
+  };
+
+  return (
+    <div className="pizza-config-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="pizza-config product-choice-config" role="dialog" aria-modal="true" aria-labelledby="product-choice-title">
+        <header className="pizza-config-header">
+          <div className="pizza-config-hero" aria-hidden="true">
+            <img src={menuImage(product)} alt="" onLoad={showLoadedImage} onError={hideBrokenImage} />
+            <span>Sem imagem</span>
+          </div>
+          <div>
+            <p className="eyebrow">Personalize o seu prato</p>
+            <h2 id="product-choice-title">{product.name}</h2>
+            <p>{product.ingredients}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Fechar personalização">×</button>
+        </header>
+
+        <div className="pizza-config-body">
+          <section className="pizza-config-block">
+            <div className="pizza-config-block-title"><span>01</span><div><h3>{product.choice.label}</h3><p>Selecione uma opção para continuar</p></div></div>
+            <div className="pizza-crust-options">
+              {product.choice.options.map((option) => (
+                <button className={choiceId === option.id ? 'selected' : ''} type="button" key={option.id} onClick={() => setChoiceId(option.id)}>
+                  <b>{option.name}</b><span>{choiceId === option.id ? 'Selecionado' : 'Escolher'}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <footer className="pizza-config-footer">
+          <div><span>Total deste prato</span><strong>{euro(product.price)}</strong></div>
+          <button type="button" disabled={!choice} onClick={addProduct}>Adicionar ao carrinho <span>→</span></button>
         </footer>
       </section>
     </div>
@@ -143,6 +233,10 @@ function ProductCard({ product, pizzas, onAdded }) {
       setConfiguring(true);
       return;
     }
+    if (product.choice) {
+      setConfiguring(true);
+      return;
+    }
     addItem(product, null);
     onAdded(product.name);
   };
@@ -150,8 +244,8 @@ function ProductCard({ product, pizzas, onAdded }) {
   return (
     <article className={`product-card tone-${product.category}`}>
       <div className="product-art" aria-hidden="true">
-        <span>{product.emoji}</span>
-        <img src={menuImage(product)} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.hidden = true; }} />
+        <img src={menuImage(product)} alt="" loading="lazy" decoding="async" onLoad={showLoadedImage} onError={hideBrokenImage} />
+        <span>Sem imagem</span>
       </div>
       <div className="product-shade" />
       <div className="product-content">
@@ -174,13 +268,21 @@ function ProductCard({ product, pizzas, onAdded }) {
         </button>
       </div>
       {configuring && createPortal(
-        <PizzaConfigurator
-          product={product}
-          size={size}
-          pizzas={pizzas}
-          onClose={() => setConfiguring(false)}
-          onAdded={onAdded}
-        />,
+        product.sizes ? (
+          <PizzaConfigurator
+            product={product}
+            size={size}
+            pizzas={pizzas}
+            onClose={() => setConfiguring(false)}
+            onAdded={onAdded}
+          />
+        ) : (
+          <ProductChoiceConfigurator
+            product={product}
+            onClose={() => setConfiguring(false)}
+            onAdded={onAdded}
+          />
+        ),
         document.body,
       )}
     </article>

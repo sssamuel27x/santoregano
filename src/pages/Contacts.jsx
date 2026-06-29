@@ -1,4 +1,4 @@
-const days = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+const openDays = ['Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
 
 export default function Contacts() {
   return (
@@ -12,8 +12,8 @@ export default function Contacts() {
         <div className="contact-grid">
           <article className="info-card schedule-card">
             <h2><span>🕐</span> Horário</h2>
-            {days.map((day) => <div className="schedule-row" key={day}><span>{day}</span><strong>12:00 – 22:00</strong></div>)}
-            <div className="schedule-row"><span>Domingo</span><strong className="closed">Encerrado</strong></div>
+            <div className="schedule-row"><span>Segunda-feira</span><strong className="closed">Encerrado</strong></div>
+            {openDays.map((day) => <div className="schedule-row" key={day}><span>{day}</span><strong>12:00 – 23:00</strong></div>)}
             <p className="schedule-note">* Em feriados, o horário de funcionamento pode ser diferente.</p>
           </article>
           <article className="info-card location-card">

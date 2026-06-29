@@ -5,13 +5,29 @@ import {
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
-import { categories as defaultCategories } from '../data/menu';
+import { categories as defaultCategories, MENU_VERSION } from '../data/menu';
 import { db } from '../firebase';
 
 const MenuContext = createContext(null);
 const menuDocument = doc(db, 'menu', 'current');
 
 const cloneDefaults = () => JSON.parse(JSON.stringify(defaultCategories));
+
+const defaultsWithRemoteImages = (remoteCategories) => {
+  const remoteProducts = new Map(
+    (remoteCategories || []).flatMap((category) => category.items || [])
+      .map((product) => [product.id, product]),
+  );
+  return cloneDefaults().map((category) => ({
+    ...category,
+    items: category.items.map((product) => {
+      const remoteProduct = remoteProducts.get(product.id);
+      return remoteProduct?.imageUrl
+        ? { ...product, imageUrl: remoteProduct.imageUrl, imagePath: remoteProduct.imagePath }
+        : product;
+    }),
+  }));
+};
 
 const isValidMenu = (value) => (
   Array.isArray(value) && value.every((category) => Array.isArray(category.items))
@@ -24,10 +40,13 @@ export function MenuProvider({ children }) {
   const [syncError, setSyncError] = useState('');
 
   useEffect(() => onSnapshot(menuDocument, (snapshot) => {
-    const remoteCategories = snapshot.data()?.categories;
-    setRemoteExists(snapshot.exists());
-    if (isValidMenu(remoteCategories)) setCategories(remoteCategories);
-    else if (!snapshot.exists()) setCategories(cloneDefaults());
+    const remoteData = snapshot.data();
+    const remoteCategories = remoteData?.categories;
+    const currentRemoteMenu = snapshot.exists()
+      && remoteData?.menuVersion === MENU_VERSION
+      && isValidMenu(remoteCategories);
+    setRemoteExists(currentRemoteMenu);
+    setCategories(currentRemoteMenu ? remoteCategories : defaultsWithRemoteImages(remoteCategories));
     setSyncError('');
     setReady(true);
   }, () => {
@@ -40,6 +59,7 @@ export function MenuProvider({ children }) {
     try {
       await setDoc(menuDocument, {
         categories: nextCategories,
+        menuVersion: MENU_VERSION,
         updatedAt: serverTimestamp(),
       });
       setRemoteExists(true);
@@ -52,8 +72,8 @@ export function MenuProvider({ children }) {
 
   const ensureMenu = useCallback(async () => {
     if (!ready || remoteExists) return;
-    await saveCategories(cloneDefaults());
-  }, [ready, remoteExists, saveCategories]);
+    await saveCategories(categories);
+  }, [categories, ready, remoteExists, saveCategories]);
 
   const addProduct = useCallback((categoryId, product) => saveCategories(categories.map((category) => (
     category.id === categoryId

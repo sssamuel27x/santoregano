@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { euro } from '../data/menu';
+import { hideBrokenImage, menuImage, showLoadedImage } from '../utils/menuImages';
 
 const WHATSAPP_NUMBER = '351926965965';
 const RESTAURANT = { lat: 40.5725835, lon: -8.4454473, label: 'Praça Conde de Águeda' };
@@ -119,7 +120,7 @@ export default function Order() {
   }, [address, fulfilment]);
 
   useEffect(() => {
-    if (deliveryQuote.status === 'success') {
+    if (deliveryQuote.status !== 'outside') {
       setErrors((current) => ({ ...current, route: false }));
     }
   }, [deliveryQuote.status]);
@@ -130,7 +131,7 @@ export default function Order() {
       name: !name.trim(),
       phone: !phone.trim(),
       address: fulfilment === 'delivery' && !address.trim(),
-      route: fulfilment === 'delivery' && deliveryQuote.status !== 'success',
+      route: fulfilment === 'delivery' && deliveryQuote.status === 'outside',
     };
     setErrors(nextErrors);
     if (Object.values(nextErrors).some(Boolean) || !cart.length) return;
@@ -139,18 +140,19 @@ export default function Order() {
     const lines = grouped.map((item) => `• ${item.quantity}× ${item.name}${item.size ? ` (${item.size})` : ''}${item.crust ? ` · Rebordo: ${item.crust}` : ''} — ${euro(item.lineTotal)}`).join('\n');
     const delivery = fulfilment === 'takeaway'
       ? 'Takeaway — levanto na pizzaria'
-      : `Entrega para: ${address} (${deliveryQuote.distance.toFixed(1).replace('.', ',')} km · cerca de ${deliveryQuote.duration} min)`;
+      : deliveryQuote.status === 'success'
+        ? `Entrega para: ${address} (${deliveryQuote.distance.toFixed(1).replace('.', ',')} km · cerca de ${deliveryQuote.duration} min)`
+        : `Entrega para: ${address} (morada e distância por confirmar)`;
     const paymentText = payment === 'dinheiro'
       ? `Dinheiro${fulfilment === 'delivery' && changeFor ? ` — preciso de troco para ${changeFor.replace('.', ',')}€` : ''}`
       : payment === 'mbway' ? 'MB Way' : 'Cartão';
-    const message = `🍕 *Novo Pedido Sant'Orégano* 🍕\n\n*Cliente:* ${name}\n*Contacto:* ${phone}\n*Entrega:* ${delivery}\n*Hora:* ${schedule || 'O mais rápido possível'}\n*Pagamento:* ${paymentText}\n\n*Pedido:*\n${lines}\n\n*Subtotal:* ${euro(subtotal)}${deliveryFee ? `\n*Taxa base de entrega:* ${euro(deliveryFee)} (valor final confirmado pela distância)` : ''}\n*Total atual:* ${euro(total)}${notes ? `\n\n*Notas:* ${notes}` : ''}\n*Código:* ${code}`;
-    const finalMessage = fulfilment === 'delivery'
-      ? message.replace(
-        `*Taxa base de entrega:* ${euro(deliveryFee)} (valor final confirmado pela distância)`,
-        `*Taxa de entrega (${deliveryQuote.distance.toFixed(1).replace('.', ',')} km):* ${euro(deliveryFee)}`,
-      )
-      : message;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(finalMessage)}`, '_blank', 'noopener,noreferrer');
+    const deliveryLine = fulfilment !== 'delivery'
+      ? ''
+      : deliveryQuote.status === 'success'
+        ? `\n*Taxa de entrega (${deliveryQuote.distance.toFixed(1).replace('.', ',')} km):* ${euro(deliveryFee)}`
+        : `\n*Taxa base de entrega:* ${euro(deliveryFee)} — morada e valor final por confirmar`;
+    const message = `🍕 *Novo Pedido Sant'Orégano* 🍕\n\n*Cliente:* ${name}\n*Contacto:* ${phone}\n*Entrega:* ${delivery}\n*Hora:* ${schedule || 'O mais rápido possível'}\n*Pagamento:* ${paymentText}\n\n*Pedido:*\n${lines}\n\n*Subtotal:* ${euro(subtotal)}${deliveryLine}\n*Total atual:* ${euro(total)}${notes ? `\n\n*Notas:* ${notes}` : ''}\n*Código:* ${code}`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -176,7 +178,10 @@ export default function Order() {
               <div className="order-items">
                 {grouped.map((item) => (
                   <div className="order-item" key={item.id}>
-                    <div className="order-emoji">{item.emoji}</div>
+                    <div className="order-image">
+                      <img src={menuImage(item)} alt="" onLoad={showLoadedImage} onError={hideBrokenImage} />
+                      <span>Sem imagem</span>
+                    </div>
                     <div className="order-item-name"><h3>{item.name}</h3><p>{item.size || item.category}{item.crust ? ` · Rebordo: ${item.crust}` : ''}</p><button type="button" onClick={() => removeItem(item.id)}>Remover</button></div>
                     <div className="quantity-control">
                       <button type="button" aria-label="Diminuir quantidade" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
@@ -219,6 +224,7 @@ export default function Order() {
                       autoComplete="street-address"
                     />
                     {errors.address && <small>Introduza a morada de entrega.</small>}
+                    <em>Se a morada não for reconhecida pelo sistema, prossiga mesmo assim. A distância e a taxa serão confirmadas pela pizzaria.</em>
                   </label>
 
                   <div className={`delivery-quote quote-${deliveryQuote.status}`} aria-live="polite">
@@ -231,9 +237,9 @@ export default function Order() {
                       </>
                     )}
                     {deliveryQuote.status === 'outside' && <p>Esta morada fica a {deliveryQuote.distance.toFixed(1).replace('.', ',')} km e está fora da área de entrega de 25 km.</p>}
-                    {deliveryQuote.status === 'error' && <p>Não encontrámos esta morada. Inclua a localidade e o código postal e tente novamente.</p>}
+                    {deliveryQuote.status === 'error' && <p>Não encontrámos esta morada, mas pode prosseguir com a encomenda. A pizzaria confirmará a distância e a taxa de entrega.</p>}
                   </div>
-                  {errors.route && !errors.address && <p className="route-error">Aguarde pelo cálculo de distância ou confirme uma morada válida.</p>}
+                  {errors.route && !errors.address && <p className="route-error">Esta morada está fora da área de entrega de 25 km.</p>}
                   <p className="map-attribution">Cálculo com dados de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>.</p>
                 </div>
               )}
@@ -276,12 +282,12 @@ export default function Order() {
                   : fulfilment === 'delivery' && deliveryQuote.status === 'outside'
                     ? 'Indisponível'
                     : fulfilment === 'delivery' && deliveryQuote.status === 'error'
-                      ? 'Rever morada'
+                      ? `${euro(deliveryFee)} provisório`
                       : deliveryFee ? euro(deliveryFee) : 'Grátis'}</strong>
               </div>
             </div>
             <div className="summary-total"><span>Total atual</span><strong>{euro(total)}</strong></div>
-            {fulfilment === 'delivery' && deliveryQuote.status !== 'success' && <p className="fee-note">A taxa atualiza automaticamente quando a morada for localizada.</p>}
+            {fulfilment === 'delivery' && deliveryQuote.status !== 'success' && deliveryQuote.status !== 'outside' && <p className="fee-note">Se a morada não for localizada, pode enviar a encomenda. A pizzaria confirmará a taxa final.</p>}
             <button className="whatsapp-btn" type="submit"><span>◉</span> Enviar via WhatsApp</button>
             <p className="checkout-note">O WhatsApp abre com o pedido e todos os valores já preenchidos.</p>
           </aside>
