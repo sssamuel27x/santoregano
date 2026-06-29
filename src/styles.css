@@ -423,7 +423,7 @@ footer { padding: 60px 48px 30px; border-top: 1px solid var(--border); backgroun
   .hero-img-wrap { max-width: 520px; }
   .page-header { padding: 125px 20px 42px; }
   .menu-section { padding: 0 14px 115px; }
-  .category-slider { grid-template-columns: repeat(6, 126px); margin-bottom: 50px; border-radius: 14px; }
+  .category-slider { grid-template-columns: repeat(3, minmax(0, 1fr)); overflow-x: visible; justify-content: stretch; margin-bottom: 50px; border-radius: 14px; }
   .category-slider button { min-height: 93px; }
   .product-grid { grid-template-columns: repeat(2, 1fr); gap: 11px; }
   .product-card { min-height: 390px; }
