@@ -50,6 +50,17 @@ main { min-height: 70vh; }
 .btn-outline { border: 1px solid rgba(255,255,255,.25); color: var(--text); }
 .btn-outline:hover { border-color: rgba(255,255,255,.55); }
 
+/* Closed state */
+.closed-page { min-height: 100vh; padding: 130px 20px 80px; display: grid; place-items: center; background: radial-gradient(circle at 50% 20%, rgba(45,106,79,.22), transparent 38%), linear-gradient(140deg, #0b0c0a, #11140f); }
+.closed-card { width: min(680px, 100%); padding: clamp(34px, 7vw, 64px); border: 1px solid var(--border); border-radius: 20px; background: rgba(20,23,20,.88); box-shadow: 0 30px 90px rgba(0,0,0,.45); text-align: center; animation: panelIn .5s ease both; }
+.closed-card h1 { margin: 15px 0 16px; font: 400 clamp(2.5rem, 7vw, 4.3rem)/.95 var(--serif); }
+.closed-card > p:not(.eyebrow) { max-width: 520px; margin: 0 auto; color: var(--muted); font-size: .9rem; line-height: 1.75; }
+.closed-hours { margin: 32px auto 20px; display: grid; gap: 10px; text-align: left; }
+.closed-hours > div { padding: 17px 18px; display: flex; justify-content: space-between; gap: 18px; align-items: center; border: 1px solid var(--border); border-radius: 13px; background: rgba(255,255,255,.025); }
+.closed-hours span { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.closed-hours strong { font-weight: 400; text-align: right; }
+.closed-note { margin-bottom: 28px !important; color: var(--green-light) !important; }
+
 /* Home */
 .hero { position: relative; min-height: 100vh; padding: 110px 48px 60px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(45px, 6vw, 90px); max-width: 1400px; margin: auto; overflow: hidden; }
 .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 80% at 10% 50%, rgba(90,50,20,.18), transparent 70%), radial-gradient(ellipse 30% 40% at 95% 20%, rgba(80,40,10,.12), transparent 60%); pointer-events: none; }
@@ -455,6 +466,9 @@ footer { padding: 60px 48px 30px; border-top: 1px solid var(--border); backgroun
   .hero-title { font-size: clamp(2.9rem,15vw,3.6rem); }
   .hero-actions { flex-wrap: wrap; }
   .hero-actions .btn { flex: 1; }
+  .closed-card { padding: 32px 20px; }
+  .closed-hours > div { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .closed-hours strong { text-align: left; }
   .product-grid { grid-template-columns: 1fr; }
   .product-card { min-height: 410px; }
   .pizza-config-backdrop { padding: 0; align-items: end; }
