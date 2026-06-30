@@ -1,6 +1,7 @@
 const TIME_ZONE = 'Europe/Lisbon';
 const OPEN_MINUTES = 12 * 60;
 const CLOSE_MINUTES = 23 * 60;
+export const RESTAURANT_STATUS_REFRESH_MS = 30 * 1000;
 
 function getLisbonParts(date = new Date()) {
   const formatter = new Intl.DateTimeFormat('en-GB', {

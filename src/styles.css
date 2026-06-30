@@ -41,6 +41,9 @@ main { min-height: 70vh; }
 .admin-login-link:hover { color: var(--text); border-color: rgba(79,156,118,.45); background: rgba(45,106,79,.08); }
 .admin-login-link span { color: var(--green-light); font-size: .8rem; }
 .mobile-toggle { display: none; }
+.closed-snackbar { position: fixed; z-index: 99; top: 88px; left: 50%; width: min(720px, calc(100% - 32px)); min-height: 45px; padding: 10px 16px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid rgba(210,152,64,.38); border-radius: 999px; background: rgba(24,20,14,.94); box-shadow: 0 16px 40px rgba(0,0,0,.34); backdrop-filter: blur(14px); transform: translateX(-50%); animation: toastIn .25s ease both; }
+.closed-snackbar span { padding: 4px 9px; border-radius: 999px; background: rgba(210,152,64,.16); color: #e6b35e; font-size: .62rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.closed-snackbar p { color: var(--text); font-size: .74rem; letter-spacing: .02em; text-align: center; }
 
 .eyebrow { color: var(--accent); font-size: .65rem; font-weight: 400; letter-spacing: .28em; text-transform: uppercase; }
 .btn { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; padding: 0 24px; border-radius: 50px; text-decoration: none; font-size: .82rem; font-weight: 400; letter-spacing: .05em; transition: transform .2s, background .2s, border-color .2s; }
@@ -60,6 +63,7 @@ main { min-height: 70vh; }
 .closed-hours span { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
 .closed-hours strong { font-weight: 400; text-align: right; }
 .closed-note { margin-bottom: 28px !important; color: var(--green-light) !important; }
+.closed-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
 /* Home */
 .hero { position: relative; min-height: 100vh; padding: 110px 48px 60px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(45px, 6vw, 90px); max-width: 1400px; margin: auto; overflow: hidden; }
@@ -124,6 +128,9 @@ main { min-height: 70vh; }
 .add-cart-btn { width: 100%; height: 38px; display: flex; align-items: center; justify-content: center; gap: 7px; border: none; border-radius: 7px; background: #337657; color: white; font-size: .72rem; letter-spacing: .03em; cursor: pointer; transition: background .2s, transform .15s; }
 .add-cart-btn:hover { background: #408f6c; }
 .add-cart-btn:active { transform: scale(.98); }
+.add-cart-btn:disabled { cursor: not-allowed; opacity: .72; background: rgba(255,255,255,.08); color: var(--muted); }
+.add-cart-btn:disabled:hover { background: rgba(255,255,255,.08); }
+.add-cart-btn:disabled > span { margin-left: 0; }
 .add-cart-btn b { margin-left: auto; padding-right: 11px; font-weight: 400; }
 .add-cart-btn > span { margin-left: auto; font-size: .95rem; }
 .cart-toast { position: fixed; z-index: 120; right: 30px; bottom: 104px; display: flex; gap: 10px; align-items: center; padding: 13px 18px; border: 1px solid rgba(79,156,118,.45); border-radius: 9px; background: rgba(19,26,21,.96); box-shadow: 0 18px 45px rgba(0,0,0,.4); color: var(--text); font-size: .75rem; animation: toastIn .25s ease both; }
@@ -428,6 +435,7 @@ footer { padding: 60px 48px 30px; border-top: 1px solid var(--border); backgroun
   .nav-actions { order: 2; margin-left: auto; gap: 4px; }
   .admin-login-link { width: 31px; padding: 0; justify-content: center; font-size: 0; }
   .admin-login-link span { font-size: .82rem; }
+  .closed-snackbar { top: 77px; flex-direction: column; gap: 5px; border-radius: 16px; }
   .nav-actions .cart-link { margin-left: 0; }
   .hero { min-height: auto; padding: 118px 20px 70px; grid-template-columns: 1fr; gap: 45px; }
   .hero-title { font-size: clamp(3.1rem,15vw,4.6rem); }
@@ -469,6 +477,9 @@ footer { padding: 60px 48px 30px; border-top: 1px solid var(--border); backgroun
   .closed-card { padding: 32px 20px; }
   .closed-hours > div { align-items: flex-start; flex-direction: column; gap: 6px; }
   .closed-hours strong { text-align: left; }
+  .closed-actions .btn { width: 100%; }
+  .closed-snackbar { width: calc(100% - 22px); padding: 9px 12px; }
+  .closed-snackbar p { font-size: .66rem; line-height: 1.35; }
   .product-grid { grid-template-columns: 1fr; }
   .product-card { min-height: 410px; }
   .pizza-config-backdrop { padding: 0; align-items: end; }

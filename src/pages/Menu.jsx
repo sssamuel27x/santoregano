@@ -4,11 +4,12 @@ import { Link } from 'react-router-dom';
 import { euro, stuffedCrusts } from '../data/menu';
 import { useCart } from '../context/CartContext';
 import { useMenu } from '../context/MenuContext';
+import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
 import { hideBrokenImage, menuImage, showLoadedImage } from '../utils/menuImages';
 
 const roundCurrency = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
-function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
+function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded }) {
   const { addConfiguredPizza } = useCart();
   const [halfAndHalf, setHalfAndHalf] = useState(false);
   const [secondId, setSecondId] = useState('');
@@ -26,7 +27,7 @@ function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
   const total = roundCurrency(flavorPrice + (crust?.price || 0));
   const missingRequiredChoice = (product.choice && !primaryChoice)
     || (halfAndHalf && secondFlavor?.choice && !secondChoice);
-  const cannotAdd = (halfAndHalf && !secondFlavor) || missingRequiredChoice;
+  const cannotAdd = !ordersOpen || (halfAndHalf && !secondFlavor) || missingRequiredChoice;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -150,10 +151,10 @@ function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
         <footer className="pizza-config-footer">
           <div>
             <span>Total desta pizza</span>
-            <strong>{cannotAdd ? '—' : euro(total)}</strong>
+            <strong>{ordersOpen ? (cannotAdd ? '—' : euro(total)) : 'Fechado'}</strong>
           </div>
           <button type="button" disabled={cannotAdd} onClick={addPizza}>
-            Adicionar ao carrinho <span>→</span>
+            {ordersOpen ? 'Adicionar ao carrinho' : 'Encomendas fechadas'} <span>→</span>
           </button>
         </footer>
       </section>
@@ -161,7 +162,7 @@ function PizzaConfigurator({ product, size, pizzas, onClose, onAdded }) {
   );
 }
 
-function ProductChoiceConfigurator({ product, onClose, onAdded }) {
+function ProductChoiceConfigurator({ product, ordersOpen, onClose, onAdded }) {
   const { addItem } = useCart();
   const [choiceId, setChoiceId] = useState('');
   const choice = product.choice.options.find((option) => option.id === choiceId) || null;
@@ -178,7 +179,7 @@ function ProductChoiceConfigurator({ product, onClose, onAdded }) {
   }, [onClose]);
 
   const addProduct = () => {
-    if (!choice) return;
+    if (!ordersOpen || !choice) return;
     addItem(product, null, choice);
     onAdded(`${product.name} (${choice.name})`);
     onClose();
@@ -215,20 +216,23 @@ function ProductChoiceConfigurator({ product, onClose, onAdded }) {
 
         <footer className="pizza-config-footer">
           <div><span>Total deste prato</span><strong>{euro(product.price)}</strong></div>
-          <button type="button" disabled={!choice} onClick={addProduct}>Adicionar ao carrinho <span>→</span></button>
+          <button type="button" disabled={!ordersOpen || !choice} onClick={addProduct}>
+            {ordersOpen ? 'Adicionar ao carrinho' : 'Encomendas fechadas'} <span>→</span>
+          </button>
         </footer>
       </section>
     </div>
   );
 }
 
-function ProductCard({ product, pizzas, onAdded }) {
+function ProductCard({ product, pizzas, ordersOpen, onAdded }) {
   const { addItem } = useCart();
   const [size, setSize] = useState('small');
   const [configuring, setConfiguring] = useState(false);
   const price = product.sizes ? product.sizes[size].price : product.price;
 
   const add = () => {
+    if (!ordersOpen) return;
     if (product.sizes) {
       setConfiguring(true);
       return;
@@ -263,8 +267,18 @@ function ProductCard({ product, pizzas, onAdded }) {
             ))}
           </div>
         )}
-        <button className="add-cart-btn" type="button" onClick={add}>
-          <span>＋</span> Adicionar <b>{euro(price)}</b>
+        <button
+          className="add-cart-btn"
+          type="button"
+          onClick={add}
+          disabled={!ordersOpen}
+          title={ordersOpen ? 'Adicionar ao carrinho' : 'Encomendas indisponíveis neste momento'}
+        >
+          {ordersOpen ? (
+            <><span>＋</span> Adicionar <b>{euro(price)}</b></>
+          ) : (
+            <><span>⏳</span> Encomendas fechadas</>
+          )}
         </button>
       </div>
       {configuring && createPortal(
@@ -273,12 +287,14 @@ function ProductCard({ product, pizzas, onAdded }) {
             product={product}
             size={size}
             pizzas={pizzas}
+            ordersOpen={ordersOpen}
             onClose={() => setConfiguring(false)}
             onAdded={onAdded}
           />
         ) : (
           <ProductChoiceConfigurator
             product={product}
+            ordersOpen={ordersOpen}
             onClose={() => setConfiguring(false)}
             onAdded={onAdded}
           />
@@ -291,6 +307,7 @@ function ProductCard({ product, pizzas, onAdded }) {
 
 export default function Menu() {
   const { categories } = useMenu();
+  const status = useRestaurantStatus();
   const [active, setActive] = useState('traditional');
   const [toast, setToast] = useState('');
   const { count, subtotal } = useCart();
@@ -328,11 +345,20 @@ export default function Menu() {
         <div className="category-intro">
           <p className="eyebrow">{category.eyebrow}</p>
           <h2>{category.label}</h2>
+          {!status.open && <span>Menu disponível para consulta. Encomendas voltam às 12:00 dentro do horário normal.</span>}
           {category.id === 'pasta' && <span>Escolha a sua massa: Talharim, Penne ou Espaguete.</span>}
         </div>
 
         <div className="product-grid" key={category.id}>
-          {category.items.map((product) => <ProductCard key={product.id} product={product} pizzas={pizzas} onAdded={showAdded} />)}
+          {category.items.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              pizzas={pizzas}
+              ordersOpen={status.open}
+              onAdded={showAdded}
+            />
+          ))}
         </div>
       </section>
 

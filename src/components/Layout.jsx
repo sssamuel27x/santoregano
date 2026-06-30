@@ -1,7 +1,8 @@
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAdmin } from '../context/AdminContext';
+import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
 
 const navItems = [
   ['/', 'Início'],
@@ -13,7 +14,10 @@ const navItems = [
 export default function Layout() {
   const { count } = useCart();
   const { authenticated } = useAdmin();
+  const { pathname } = useLocation();
+  const status = useRestaurantStatus();
   const [open, setOpen] = useState(false);
+  const showClosedNotice = !status.open && !pathname.startsWith('/admin');
 
   return (
     <div className="site-shell">
@@ -46,6 +50,13 @@ export default function Layout() {
           </Link>
         </div>
       </nav>
+
+      {showClosedNotice && (
+        <div className="closed-snackbar" role="status">
+          <span>Encerrado agora</span>
+          <p>Encomendas indisponíveis neste momento. O menu continua disponível para consulta.</p>
+        </div>
+      )}
 
       <main><Outlet /></main>
 

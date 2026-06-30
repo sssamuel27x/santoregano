@@ -1,5 +1,5 @@
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Menu from './pages/Menu';
@@ -8,7 +8,7 @@ import Order from './pages/Order';
 import AdminLogin from './pages/AdminLogin';
 import AdminPanel from './pages/AdminPanel';
 import Closed from './pages/Closed';
-import { getRestaurantStatus } from './utils/openingHours';
+import { useRestaurantStatus } from './hooks/useRestaurantStatus';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -16,15 +16,8 @@ function ScrollToTop() {
   return null;
 }
 
-function PublicRoute({ children }) {
-  const [status, setStatus] = useState(() => getRestaurantStatus());
-
-  useEffect(() => {
-    const updateStatus = () => setStatus(getRestaurantStatus());
-    const interval = window.setInterval(updateStatus, 30 * 1000);
-    return () => window.clearInterval(interval);
-  }, []);
-
+function OrderRoute({ children }) {
+  const status = useRestaurantStatus();
   return status.open ? children : <Closed status={status} />;
 }
 
@@ -34,17 +27,17 @@ export default function App() {
       <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
-          <Route path="/index.html" element={<PublicRoute><Home /></PublicRoute>} />
-          <Route path="/pizzas" element={<PublicRoute><Menu /></PublicRoute>} />
-          <Route path="/pizzas.html" element={<PublicRoute><Menu /></PublicRoute>} />
-          <Route path="/contactos" element={<PublicRoute><Contacts /></PublicRoute>} />
-          <Route path="/contactos.html" element={<PublicRoute><Contacts /></PublicRoute>} />
-          <Route path="/encomenda" element={<PublicRoute><Order /></PublicRoute>} />
-          <Route path="/encomenda.html" element={<PublicRoute><Order /></PublicRoute>} />
+          <Route path="/" element={<Home />} />
+          <Route path="/index.html" element={<Home />} />
+          <Route path="/pizzas" element={<Menu />} />
+          <Route path="/pizzas.html" element={<Menu />} />
+          <Route path="/contactos" element={<Contacts />} />
+          <Route path="/contactos.html" element={<Contacts />} />
+          <Route path="/encomenda" element={<OrderRoute><Order /></OrderRoute>} />
+          <Route path="/encomenda.html" element={<OrderRoute><Order /></OrderRoute>} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminPanel />} />
-          <Route path="*" element={<PublicRoute><Home /></PublicRoute>} />
+          <Route path="*" element={<Home />} />
         </Route>
       </Routes>
     </>
