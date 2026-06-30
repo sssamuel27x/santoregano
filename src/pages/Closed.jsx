@@ -1,38 +1,37 @@
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Closed({ status }) {
+  const { t } = useLanguage();
   const isMonday = status?.closedForDay;
 
   return (
     <section className="closed-page">
       <div className="closed-card">
         <p className="eyebrow">Sant&apos; Orégano</p>
-        <h1>Encomendas fechadas neste momento</h1>
-        <p>
-          Fora do horário de funcionamento não é possível finalizar encomendas.
-          Pode voltar ao menu e consultar os produtos disponíveis.
-        </p>
+        <h1>{t('closed.title')}</h1>
+        <p>{t('closed.desc')}</p>
 
         <div className="closed-hours">
           <div>
-            <span>Horário</span>
-            <strong>Terça a Domingo · 12:00 – 23:00</strong>
+            <span>{t('closed.schedule')}</span>
+            <strong>{t('closed.scheduleValue')}</strong>
           </div>
           <div>
-            <span>Segunda-feira</span>
-            <strong>Encerrado</strong>
+            <span>{t('closed.monday')}</span>
+            <strong>{t('closed.closed')}</strong>
           </div>
         </div>
 
         <p className="closed-note">
           {isMonday
-            ? 'Voltamos amanhã às 12:00.'
-            : 'Voltamos a aceitar encomendas durante o horário normal.'}
+            ? t('closed.mondayNote')
+            : t('closed.normalNote')}
         </p>
 
         <div className="closed-actions">
-          <Link className="btn btn-primary" to="/pizzas">Ver menu</Link>
-          <Link className="btn btn-outline" to="/admin/login">Área de administrador</Link>
+          <Link className="btn btn-primary" to="/pizzas">{t('closed.viewMenu')}</Link>
+          <Link className="btn btn-outline" to="/admin/login">{t('closed.adminArea')}</Link>
         </div>
       </div>
     </section>

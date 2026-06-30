@@ -37,6 +37,11 @@ main { min-height: 70vh; }
 .cart-link b { min-width: 23px; height: 23px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: white; font-size: .69rem; }
 .cart-icon { font-size: 1.25rem; transform: rotate(-10deg); }
 .nav-actions { display: flex; align-items: center; gap: 14px; }
+.language-picker { display: inline-flex; align-items: center; }
+.language-picker > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.language-picker select { width: 52px; height: 31px; padding: 0 7px; border: 1px solid var(--border); border-radius: 999px; outline: none; background: rgba(255,255,255,.025); color: var(--muted); font-size: .63rem; font-weight: 500; letter-spacing: .05em; cursor: pointer; transition: color .2s, border-color .2s, background .2s; }
+.language-picker select:hover, .language-picker select:focus { color: var(--text); border-color: rgba(79,156,118,.45); background: rgba(45,106,79,.08); }
+.language-picker option { background: #111310; color: var(--text); }
 .admin-login-link { min-height: 31px; padding: 0 11px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 50px; color: var(--muted); text-decoration: none; font-size: .65rem; font-weight: 400; letter-spacing: .06em; transition: color .2s, border-color .2s, background .2s; }
 .admin-login-link:hover { color: var(--text); border-color: rgba(79,156,118,.45); background: rgba(45,106,79,.08); }
 .admin-login-link span { color: var(--green-light); font-size: .8rem; }
@@ -433,6 +438,7 @@ footer { padding: 60px 48px 30px; border-top: 1px solid var(--border); backgroun
   .cart-link { order: 2; margin-left: auto; margin-right: 8px; min-width: auto; }
   .cart-link > span:not(.cart-icon) { display: none; }
   .nav-actions { order: 2; margin-left: auto; gap: 4px; }
+  .language-picker select { width: 43px; height: 31px; padding: 0 5px; font-size: .58rem; }
   .admin-login-link { width: 31px; padding: 0; justify-content: center; font-size: 0; }
   .admin-login-link span { font-size: .82rem; }
   .closed-snackbar { top: 69px; justify-content: flex-start; gap: 8px; padding: 8px 13px; }

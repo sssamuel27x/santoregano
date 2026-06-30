@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import { euro } from '../data/menu';
 import { hideBrokenImage, menuImage, showLoadedImage } from '../utils/menuImages';
 
@@ -35,6 +36,7 @@ function saveDeliveryQuote(key, quote) {
 
 export default function Order() {
   const { cart, subtotal, updateQuantity, removeItem, clearCart } = useCart();
+  const { t } = useLanguage();
   const [fulfilment, setFulfilment] = useState('takeaway');
   const [payment, setPayment] = useState('dinheiro');
   const [name, setName] = useState('');
@@ -158,61 +160,61 @@ export default function Order() {
   return (
     <>
       <header className="page-header order-header">
-        <p className="eyebrow">Ordine dal Forno</p>
-        <h1>A Sua Encomenda</h1>
-        <p>O que escolheu no menu já está aqui, com o preço calculado. Só falta dizer-nos como quer receber.</p>
+        <p className="eyebrow">{t('order.eyebrow')}</p>
+        <h1>{t('order.title')}</h1>
+        <p>{t('order.desc')}</p>
       </header>
 
       {!cart.length ? (
         <section className="empty-cart">
           <span>🍕</span>
-          <h2>O carrinho ainda está vazio.</h2>
-          <p>Explore o menu e adicione as suas pizzas, entradas, massas, refeições e bebidas.</p>
-          <Link className="btn btn-primary" to="/pizzas">Explorar o menu →</Link>
+          <h2>{t('order.emptyTitle')}</h2>
+          <p>{t('order.emptyDesc')}</p>
+          <Link className="btn btn-primary" to="/pizzas">{t('order.exploreMenu')}</Link>
         </section>
       ) : (
         <form className="checkout" onSubmit={submitOrder}>
           <div className="checkout-main">
             <section className="checkout-card cart-review">
-              <div className="section-heading"><div><span>01</span><h2>O seu pedido</h2></div><Link to="/pizzas">＋ Adicionar mais</Link></div>
+              <div className="section-heading"><div><span>01</span><h2>{t('order.yourOrder')}</h2></div><Link to="/pizzas">{t('order.addMore')}</Link></div>
               <div className="order-items">
                 {grouped.map((item) => (
                   <div className="order-item" key={item.id}>
                     <div className="order-image">
                       <img src={menuImage(item)} alt="" onLoad={showLoadedImage} onError={hideBrokenImage} />
-                      <span>Sem imagem</span>
+                      <span>{t('order.noImage')}</span>
                     </div>
-                    <div className="order-item-name"><h3>{item.name}</h3><p>{item.size || item.category}{item.crust ? ` · Rebordo: ${item.crust}` : ''}</p><button type="button" onClick={() => removeItem(item.id)}>Remover</button></div>
+                    <div className="order-item-name"><h3>{item.name}</h3><p>{item.size || item.category}{item.crust ? ` · Rebordo: ${item.crust}` : ''}</p><button type="button" onClick={() => removeItem(item.id)}>{t('order.remove')}</button></div>
                     <div className="quantity-control">
-                      <button type="button" aria-label="Diminuir quantidade" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                      <button type="button" aria-label={t('order.decreaseQty')} onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
                       <span>{item.quantity}</span>
-                      <button type="button" aria-label="Aumentar quantidade" onClick={() => updateQuantity(item.id, item.quantity + 1)}>＋</button>
+                      <button type="button" aria-label={t('order.increaseQty')} onClick={() => updateQuantity(item.id, item.quantity + 1)}>＋</button>
                     </div>
                     <strong className="line-price">{euro(item.lineTotal)}</strong>
                   </div>
                 ))}
               </div>
-              <button className="clear-cart" type="button" onClick={clearCart}>Esvaziar carrinho</button>
+              <button className="clear-cart" type="button" onClick={clearCart}>{t('order.clearCart')}</button>
             </section>
 
             <section className="checkout-card">
-              <div className="section-heading"><div><span>02</span><h2>Contacto</h2></div></div>
+              <div className="section-heading"><div><span>02</span><h2>{t('order.contact')}</h2></div></div>
               <div className="form-grid two">
-                <label>Nome<input className={errors.name ? 'invalid' : ''} value={name} onChange={(e) => setName(e.target.value)} placeholder="O seu nome" autoComplete="name" />{errors.name && <small>Introduza o seu nome.</small>}</label>
-                <label>Telefone<input className={errors.phone ? 'invalid' : ''} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="9XX XXX XXX" autoComplete="tel" />{errors.phone && <small>Introduza um contacto válido.</small>}</label>
+                <label>{t('order.name')}<input className={errors.name ? 'invalid' : ''} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('order.namePlaceholder')} autoComplete="name" />{errors.name && <small>{t('order.nameError')}</small>}</label>
+                <label>{t('order.phone')}<input className={errors.phone ? 'invalid' : ''} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="9XX XXX XXX" autoComplete="tel" />{errors.phone && <small>{t('order.phoneError')}</small>}</label>
               </div>
             </section>
 
             <section className="checkout-card">
-              <div className="section-heading"><div><span>03</span><h2>Entrega</h2></div></div>
+              <div className="section-heading"><div><span>03</span><h2>{t('order.delivery')}</h2></div></div>
               <div className="choice-grid">
-                <button className={fulfilment === 'takeaway' ? 'selected' : ''} type="button" onClick={() => setFulfilment('takeaway')}><span>🏠</span><b>Takeaway</b><small>Levanto na pizzaria</small></button>
-                <button className={fulfilment === 'delivery' ? 'selected' : ''} type="button" onClick={() => setFulfilment('delivery')}><span>🛵</span><b>Entrega em casa</b><small>Desde 1€</small></button>
+                <button className={fulfilment === 'takeaway' ? 'selected' : ''} type="button" onClick={() => setFulfilment('takeaway')}><span>🏠</span><b>{t('order.takeaway')}</b><small>{t('order.takeawayHelp')}</small></button>
+                <button className={fulfilment === 'delivery' ? 'selected' : ''} type="button" onClick={() => setFulfilment('delivery')}><span>🛵</span><b>{t('order.homeDelivery')}</b><small>{t('order.fromOne')}</small></button>
               </div>
               {fulfilment === 'delivery' && (
                 <div className="address-lookup">
                   <label className="full-field">
-                    Morada
+                    {t('order.address')}
                     <input
                       className={errors.address ? 'invalid' : ''}
                       value={address}
@@ -220,40 +222,40 @@ export default function Order() {
                         setAddress(event.target.value);
                         setErrors((current) => ({ ...current, address: false, route: false }));
                       }}
-                      placeholder="Rua, número, localidade e código postal"
+                      placeholder={t('order.addressPlaceholder')}
                       autoComplete="street-address"
                     />
-                    {errors.address && <small>Introduza a morada de entrega.</small>}
-                    <em>Se a morada não for reconhecida pelo sistema, prossiga mesmo assim. A distância e a taxa serão confirmadas pela pizzaria.</em>
+                    {errors.address && <small>{t('order.addressError')}</small>}
+                    <em>{t('order.addressHelp')}</em>
                   </label>
 
                   <div className={`delivery-quote quote-${deliveryQuote.status}`} aria-live="polite">
-                    {deliveryQuote.status === 'idle' && <p>Escreva a morada completa para calcular a rota.</p>}
-                    {deliveryQuote.status === 'loading' && <p><span className="quote-spinner" /> A calcular distância por estrada…</p>}
+                    {deliveryQuote.status === 'idle' && <p>{t('order.routeIdle')}</p>}
+                    {deliveryQuote.status === 'loading' && <p><span className="quote-spinner" /> {t('order.routeLoading')}</p>}
                     {deliveryQuote.status === 'success' && (
                       <>
-                        <div><strong>{deliveryQuote.distance.toFixed(1).replace('.', ',')} km</strong><span>Cerca de {deliveryQuote.duration} min desde {RESTAURANT.label}</span></div>
+                        <div><strong>{deliveryQuote.distance.toFixed(1).replace('.', ',')} km</strong><span>{t('order.routeFrom', { minutes: deliveryQuote.duration, place: RESTAURANT.label })}</span></div>
                         <b>{euro(deliveryQuote.fee)}</b>
                       </>
                     )}
-                    {deliveryQuote.status === 'outside' && <p>Esta morada fica a {deliveryQuote.distance.toFixed(1).replace('.', ',')} km e está fora da área de entrega de 25 km.</p>}
-                    {deliveryQuote.status === 'error' && <p>Não encontrámos esta morada, mas pode prosseguir com a encomenda. A pizzaria confirmará a distância e a taxa de entrega.</p>}
+                    {deliveryQuote.status === 'outside' && <p>{t('order.routeOutside', { distance: deliveryQuote.distance.toFixed(1).replace('.', ',') })}</p>}
+                    {deliveryQuote.status === 'error' && <p>{t('order.routeError')}</p>}
                   </div>
-                  {errors.route && !errors.address && <p className="route-error">Esta morada está fora da área de entrega de 25 km.</p>}
-                  <p className="map-attribution">Cálculo com dados de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>.</p>
+                  {errors.route && !errors.address && <p className="route-error">{t('order.outsideError')}</p>}
+                  <p className="map-attribution">{t('order.mapAttribution')} <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>.</p>
                 </div>
               )}
-              <label className="full-field">Quando?<input type="datetime-local" value={schedule} onChange={(e) => setSchedule(e.target.value)} /><em>Deixe vazio para receber o mais rápido possível.</em></label>
+              <label className="full-field">{t('order.when')}<input type="datetime-local" value={schedule} onChange={(e) => setSchedule(e.target.value)} /><em>{t('order.asap')}</em></label>
             </section>
 
             <section className="checkout-card">
-              <div className="section-heading"><div><span>04</span><h2>Pagamento</h2></div></div>
+              <div className="section-heading"><div><span>04</span><h2>{t('order.payment')}</h2></div></div>
               <div className="payment-grid">
-                {[['dinheiro', '💵', 'Dinheiro'], ['mbway', '📱', 'MB Way'], ['cartao', '💳', 'Cartão']].map(([id, icon, label]) => <button className={payment === id ? 'selected' : ''} type="button" key={id} onClick={() => setPayment(id)}><span>{icon}</span><b>{label}</b></button>)}
+                {[['dinheiro', '💵', t('order.cash')], ['mbway', '📱', 'MB Way'], ['cartao', '💳', t('order.card')]].map(([id, icon, label]) => <button className={payment === id ? 'selected' : ''} type="button" key={id} onClick={() => setPayment(id)}><span>{icon}</span><b>{label}</b></button>)}
               </div>
               {fulfilment === 'delivery' && payment === 'dinheiro' && (
                 <label className="full-field change-field">
-                  Preciso troco para
+                  {t('order.changeFor')}
                   <input
                     type="number"
                     min="0"
@@ -261,35 +263,35 @@ export default function Order() {
                     inputMode="decimal"
                     value={changeFor}
                     onChange={(event) => setChangeFor(event.target.value)}
-                    placeholder="Ex.: 20€"
+                    placeholder={t('order.changePlaceholder')}
                   />
-                  <em>Deixe vazio se não precisar de troco.</em>
+                  <em>{t('order.changeHelp')}</em>
                 </label>
               )}
-              <label className="full-field">Notas para a cozinha<textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alergias, ponto da massa, instruções de entrega…" rows="3" /></label>
+              <label className="full-field">{t('order.kitchenNotes')}<textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('order.notesPlaceholder')} rows="3" /></label>
             </section>
           </div>
 
           <aside className="order-summary">
-            <p className="eyebrow">Resumo</p>
-            <h2>Total da encomenda</h2>
+            <p className="eyebrow">{t('order.summary')}</p>
+            <h2>{t('order.totalOrder')}</h2>
             <div className="summary-lines">
-              <div><span>Subtotal · {cart.reduce((sum, item) => sum + item.quantity, 0)} artigos</span><strong>{euro(subtotal)}</strong></div>
+              <div><span>{t('order.subtotal', { count: cart.reduce((sum, item) => sum + item.quantity, 0) })}</span><strong>{euro(subtotal)}</strong></div>
               <div>
-                <span>{fulfilment === 'delivery' ? deliveryQuote.status === 'success' ? `Entrega · ${deliveryQuote.distance.toFixed(1).replace('.', ',')} km` : 'Taxa base de entrega' : 'Takeaway'}</span>
+                <span>{fulfilment === 'delivery' ? deliveryQuote.status === 'success' ? t('order.deliveryDistance', { distance: deliveryQuote.distance.toFixed(1).replace('.', ',') }) : t('order.deliveryBase') : t('order.takeaway')}</span>
                 <strong>{fulfilment === 'delivery' && deliveryQuote.status === 'loading'
-                  ? 'A calcular…'
+                  ? t('order.calculating')
                   : fulfilment === 'delivery' && deliveryQuote.status === 'outside'
-                    ? 'Indisponível'
+                    ? t('order.unavailable')
                     : fulfilment === 'delivery' && deliveryQuote.status === 'error'
-                      ? `${euro(deliveryFee)} provisório`
-                      : deliveryFee ? euro(deliveryFee) : 'Grátis'}</strong>
+                      ? t('order.temporary', { fee: euro(deliveryFee) })
+                      : deliveryFee ? euro(deliveryFee) : t('order.free')}</strong>
               </div>
             </div>
-            <div className="summary-total"><span>Total atual</span><strong>{euro(total)}</strong></div>
-            {fulfilment === 'delivery' && deliveryQuote.status !== 'success' && deliveryQuote.status !== 'outside' && <p className="fee-note">Se a morada não for localizada, pode enviar a encomenda. A pizzaria confirmará a taxa final.</p>}
-            <button className="whatsapp-btn" type="submit"><span>◉</span> Enviar via WhatsApp</button>
-            <p className="checkout-note">O WhatsApp abre com o pedido e todos os valores já preenchidos.</p>
+            <div className="summary-total"><span>{t('order.currentTotal')}</span><strong>{euro(total)}</strong></div>
+            {fulfilment === 'delivery' && deliveryQuote.status !== 'success' && deliveryQuote.status !== 'outside' && <p className="fee-note">{t('order.feeNote')}</p>}
+            <button className="whatsapp-btn" type="submit"><span>◉</span> {t('order.sendWhatsApp')}</button>
+            <p className="checkout-note">{t('order.whatsappNote')}</p>
           </aside>
         </form>
       )}
