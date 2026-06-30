@@ -6,13 +6,14 @@ import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useMenu } from '../context/MenuContext';
 import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
+import { translateCategory, translateChoice, translateProduct } from '../data/menuTranslations';
 import { hideBrokenImage, menuImage, showLoadedImage } from '../utils/menuImages';
 
 const roundCurrency = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded }) {
   const { addConfiguredPizza } = useCart();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [halfAndHalf, setHalfAndHalf] = useState(false);
   const [secondId, setSecondId] = useState('');
   const [crustId, setCrustId] = useState('');
@@ -22,6 +23,10 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
   const crust = stuffedCrusts.find((item) => item.id === crustId) || null;
   const primaryChoice = product.choice?.options.find((item) => item.id === primaryChoiceId) || null;
   const secondChoice = secondFlavor?.choice?.options.find((item) => item.id === secondChoiceId) || null;
+  const displayProduct = translateProduct(product, language);
+  const displaySecondFlavor = secondFlavor ? translateProduct(secondFlavor, language) : null;
+  const displayProductChoice = translateChoice(product.choice, product.id, language);
+  const displaySecondChoice = secondFlavor ? translateChoice(secondFlavor.choice, secondFlavor.id, language) : null;
   const sizeInfo = product.sizes[size];
   const flavorPrice = secondFlavor
     ? (sizeInfo.price / 2) + (secondFlavor.sizes[size].price / 2)
@@ -57,7 +62,7 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
       secondChoice: halfAndHalf ? secondChoice : null,
       price: total,
     });
-    onAdded(halfAndHalf && secondFlavor ? `${product.name} + ${secondFlavor.name}` : product.name);
+    onAdded(halfAndHalf && displaySecondFlavor ? `${displayProduct.name} + ${displaySecondFlavor.name}` : displayProduct.name);
     onClose();
   };
 
@@ -71,8 +76,8 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
           </div>
           <div>
             <p className="eyebrow">{t('menu.customizePizza')}</p>
-            <h2 id="pizza-config-title">{product.name}</h2>
-            <p>{product.ingredients}</p>
+            <h2 id="pizza-config-title">{displayProduct.name}</h2>
+            <p>{displayProduct.ingredients}</p>
           </div>
           <button type="button" onClick={onClose} aria-label={t('menu.closeCustomization')}>×</button>
         </header>
@@ -87,7 +92,7 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
             <div className="pizza-config-block-title"><span>02</span><div><h3>{t('menu.flavors')}</h3><p>{t('menu.flavorsHelp')}</p></div></div>
             <div className="pizza-flavor-mode">
               <button className={!halfAndHalf ? 'selected' : ''} type="button" onClick={() => { setHalfAndHalf(false); setSecondId(''); }}>
-                <span>●</span><b>{t('menu.wholePizza')}</b><small>{product.name}</small>
+                <span>●</span><b>{t('menu.wholePizza')}</b><small>{displayProduct.name}</small>
               </button>
               <button className={halfAndHalf ? 'selected' : ''} type="button" onClick={() => setHalfAndHalf(true)}>
                 <span>◐</span><b>{t('menu.halfHalf')}</b><small>{t('menu.combine')}</small>
@@ -99,11 +104,11 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
                 <select value={secondId} onChange={(event) => setSecondId(event.target.value)} autoFocus>
                   <option value="">{t('menu.chooseOtherHalf')}</option>
                   {pizzas.filter((pizza) => pizza.id !== product.id).map((pizza) => (
-                    <option key={pizza.id} value={pizza.id}>{pizza.name} · {euro(pizza.sizes[size].price)}</option>
+                    <option key={pizza.id} value={pizza.id}>{translateProduct(pizza, language).name} · {euro(pizza.sizes[size].price)}</option>
                   ))}
                 </select>
                 {secondFlavor && (
-                  <small>½ {product.name} + ½ {secondFlavor.name} = {euro(roundCurrency(flavorPrice))}</small>
+                  <small>½ {displayProduct.name} + ½ {displaySecondFlavor.name} = {euro(roundCurrency(flavorPrice))}</small>
                 )}
               </label>
             )}
@@ -111,10 +116,10 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
               <div className="pizza-choice-fields">
                 {product.choice && (
                   <label className="pizza-second-flavor">
-                    {halfAndHalf ? t('menu.optionForHalf', { name: product.name }) : product.choice.label}
+                    {halfAndHalf ? t('menu.optionForHalf', { name: displayProduct.name }) : displayProductChoice.label}
                     <select value={primaryChoiceId} onChange={(event) => setPrimaryChoiceId(event.target.value)}>
                       <option value="">{t('menu.chooseOption')}</option>
-                      {product.choice.options.map((option) => (
+                      {displayProductChoice.options.map((option) => (
                         <option key={option.id} value={option.id}>{option.name}</option>
                       ))}
                     </select>
@@ -122,10 +127,10 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
                 )}
                 {halfAndHalf && secondFlavor?.choice && (
                   <label className="pizza-second-flavor">
-                    {t('menu.optionForHalf', { name: secondFlavor.name })}
+                    {t('menu.optionForHalf', { name: displaySecondFlavor.name })}
                     <select value={secondChoiceId} onChange={(event) => setSecondChoiceId(event.target.value)}>
                       <option value="">{t('menu.chooseOption')}</option>
-                      {secondFlavor.choice.options.map((option) => (
+                      {displaySecondChoice.options.map((option) => (
                         <option key={option.id} value={option.id}>{option.name}</option>
                       ))}
                     </select>
@@ -166,9 +171,12 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
 
 function ProductChoiceConfigurator({ product, ordersOpen, onClose, onAdded }) {
   const { addItem } = useCart();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [choiceId, setChoiceId] = useState('');
   const choice = product.choice.options.find((option) => option.id === choiceId) || null;
+  const displayProduct = translateProduct(product, language);
+  const displayChoice = translateChoice(product.choice, product.id, language);
+  const displaySelectedChoice = displayChoice.options.find((option) => option.id === choiceId) || null;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -184,7 +192,7 @@ function ProductChoiceConfigurator({ product, ordersOpen, onClose, onAdded }) {
   const addProduct = () => {
     if (!ordersOpen || !choice) return;
     addItem(product, null, choice);
-    onAdded(`${product.name} (${choice.name})`);
+    onAdded(`${displayProduct.name} (${displaySelectedChoice?.name || choice.name})`);
     onClose();
   };
 
@@ -198,17 +206,17 @@ function ProductChoiceConfigurator({ product, ordersOpen, onClose, onAdded }) {
           </div>
           <div>
             <p className="eyebrow">{t('menu.customizeProduct')}</p>
-            <h2 id="product-choice-title">{product.name}</h2>
-            <p>{product.ingredients}</p>
+            <h2 id="product-choice-title">{displayProduct.name}</h2>
+            <p>{displayProduct.ingredients}</p>
           </div>
           <button type="button" onClick={onClose} aria-label={t('menu.closeCustomization')}>×</button>
         </header>
 
         <div className="pizza-config-body">
           <section className="pizza-config-block">
-            <div className="pizza-config-block-title"><span>01</span><div><h3>{product.choice.label}</h3><p>{t('menu.productChoiceHelp')}</p></div></div>
+            <div className="pizza-config-block-title"><span>01</span><div><h3>{displayChoice.label}</h3><p>{t('menu.productChoiceHelp')}</p></div></div>
             <div className="pizza-crust-options">
-              {product.choice.options.map((option) => (
+              {displayChoice.options.map((option) => (
                 <button className={choiceId === option.id ? 'selected' : ''} type="button" key={option.id} onClick={() => setChoiceId(option.id)}>
                   <b>{option.name}</b><span>{choiceId === option.id ? t('menu.selected') : t('menu.choose')}</span>
                 </button>
@@ -230,10 +238,11 @@ function ProductChoiceConfigurator({ product, ordersOpen, onClose, onAdded }) {
 
 function ProductCard({ product, pizzas, ordersOpen, onAdded }) {
   const { addItem } = useCart();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [size, setSize] = useState('small');
   const [configuring, setConfiguring] = useState(false);
   const price = product.sizes ? product.sizes[size].price : product.price;
+  const displayProduct = translateProduct(product, language);
 
   const add = () => {
     if (!ordersOpen) return;
@@ -246,7 +255,7 @@ function ProductCard({ product, pizzas, ordersOpen, onAdded }) {
       return;
     }
     addItem(product, null);
-    onAdded(product.name);
+    onAdded(displayProduct.name);
   };
 
   return (
@@ -258,10 +267,10 @@ function ProductCard({ product, pizzas, ordersOpen, onAdded }) {
       <div className="product-shade" />
       <div className="product-content">
         <div className="product-heading">
-          <h3>{product.name}</h3>
+          <h3>{displayProduct.name}</h3>
           {!product.sizes && <span className="price-badge">{euro(product.price)}</span>}
         </div>
-        <p>{product.ingredients}</p>
+        <p>{displayProduct.ingredients}</p>
         {product.sizes && (
           <div className="size-picker" aria-label="Escolher tamanho">
             {Object.entries(product.sizes).map(([key, value]) => (
@@ -311,13 +320,14 @@ function ProductCard({ product, pizzas, ordersOpen, onAdded }) {
 
 export default function Menu() {
   const { categories } = useMenu();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const status = useRestaurantStatus();
   const [active, setActive] = useState('traditional');
   const [toast, setToast] = useState('');
   const { count, subtotal } = useCart();
   const timer = useRef(null);
   const category = categories.find((item) => item.id === active);
+  const displayCategory = translateCategory(category, language);
   const pizzas = categories
     .filter((item) => item.id === 'traditional' || item.id === 'sweet')
     .flatMap((item) => item.items);
@@ -342,14 +352,14 @@ export default function Menu() {
         <div className="category-slider" role="tablist" aria-label={t('menu.categoriesAria')}>
           {categories.map((item) => (
             <button key={item.id} className={active === item.id ? 'active' : ''} type="button" onClick={() => setActive(item.id)}>
-              <span>{item.icon}</span><b>{t(`categories.${item.id}.short`, {}, item.short)}</b><small>{t('menu.optionsCount', { count: item.items.length })}</small>
+              <span>{item.icon}</span><b>{translateCategory(item, language).short}</b><small>{t('menu.optionsCount', { count: item.items.length })}</small>
             </button>
           ))}
         </div>
 
         <div className="category-intro">
-          <p className="eyebrow">{category.eyebrow}</p>
-          <h2>{t(`categories.${category.id}.short`, {}, category.label)}</h2>
+          <p className="eyebrow">{displayCategory.eyebrow}</p>
+          <h2>{displayCategory.label}</h2>
           {!status.open && <span>{t('menu.consultOnly')}</span>}
           {category.id === 'pasta' && <span>{t('menu.pastaChoice')}</span>}
         </div>

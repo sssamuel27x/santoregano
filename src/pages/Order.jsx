@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useMenu } from '../context/MenuContext';
 import { euro } from '../data/menu';
+import { translateCartItemName, translateCategory } from '../data/menuTranslations';
 import { hideBrokenImage, menuImage, showLoadedImage } from '../utils/menuImages';
 
 const WHATSAPP_NUMBER = '351926965965';
@@ -36,7 +38,8 @@ function saveDeliveryQuote(key, quote) {
 
 export default function Order() {
   const { cart, subtotal, updateQuantity, removeItem, clearCart } = useCart();
-  const { t } = useLanguage();
+  const { categories } = useMenu();
+  const { language, t } = useLanguage();
   const [fulfilment, setFulfilment] = useState('takeaway');
   const [payment, setPayment] = useState('dinheiro');
   const [name, setName] = useState('');
@@ -53,6 +56,12 @@ export default function Order() {
     : 0;
   const total = subtotal + deliveryFee;
   const grouped = useMemo(() => cart.map((item) => ({ ...item, lineTotal: item.price * item.quantity })), [cart]);
+  const products = useMemo(() => new Map(
+    categories.flatMap((category) => category.items).map((product) => [product.id, product]),
+  ), [categories]);
+  const categoryNames = useMemo(() => new Map(
+    categories.map((category) => [category.id, translateCategory(category, language).short]),
+  ), [categories, language]);
 
   useEffect(() => {
     if (fulfilment !== 'delivery') {
@@ -184,7 +193,11 @@ export default function Order() {
                       <img src={menuImage(item)} alt="" onLoad={showLoadedImage} onError={hideBrokenImage} />
                       <span>{t('order.noImage')}</span>
                     </div>
-                    <div className="order-item-name"><h3>{item.name}</h3><p>{item.size || item.category}{item.crust ? ` · Rebordo: ${item.crust}` : ''}</p><button type="button" onClick={() => removeItem(item.id)}>{t('order.remove')}</button></div>
+                    <div className="order-item-name">
+                      <h3>{translateCartItemName(item, products, language)}</h3>
+                      <p>{item.size || categoryNames.get(item.category) || item.category}{item.crust ? ` · ${t('menu.stuffedCrust')}: ${item.crust}` : ''}</p>
+                      <button type="button" onClick={() => removeItem(item.id)}>{t('order.remove')}</button>
+                    </div>
                     <div className="quantity-control">
                       <button type="button" aria-label={t('order.decreaseQty')} onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
                       <span>{item.quantity}</span>
