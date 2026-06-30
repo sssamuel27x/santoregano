@@ -54,7 +54,7 @@ export default function Layout() {
       {showClosedNotice && (
         <div className="closed-snackbar" role="status">
           <span>Encerrado agora</span>
-          <p>Encomendas indisponíveis neste momento. O menu continua disponível para consulta.</p>
+          <p>Encomendas indisponíveis agora. O menu continua disponível para consulta.</p>
         </div>
       )}
 
