@@ -11,7 +11,7 @@ const WHATSAPP_NUMBER = '351926965965';
 const RESTAURANT = { lat: 40.5725835, lon: -8.4454473, label: 'Praça Conde de Águeda' };
 const GEOCODING_URL = 'https://nominatim.openstreetmap.org/search';
 const ROUTING_URL = 'https://router.project-osrm.org/route/v1/driving';
-const DELIVERY_CACHE_KEY = 'santoregano-delivery-cache-v1';
+const DELIVERY_CACHE_KEY = 'santoregano-delivery-cache-v2';
 const CACHE_LIFETIME = 7 * 24 * 60 * 60 * 1000;
 const EMPTY_QUOTE = { status: 'idle', distance: 0, duration: 0, fee: 0, displayName: '' };
 
