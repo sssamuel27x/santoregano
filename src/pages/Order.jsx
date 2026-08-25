@@ -52,7 +52,7 @@ export default function Order() {
   const [deliveryQuote, setDeliveryQuote] = useState(EMPTY_QUOTE);
 
   const deliveryFee = fulfilment === 'delivery'
-    ? deliveryQuote.status === 'success' ? deliveryQuote.fee : deliveryQuote.status === 'outside' ? 0 : 1
+    ? deliveryQuote.status === 'success' ? deliveryQuote.fee : deliveryQuote.status === 'outside' ? 0 : 0.9
     : 0;
   const total = subtotal + deliveryFee;
   const grouped = useMemo(() => cart.map((item) => ({ ...item, lineTotal: item.price * item.quantity })), [cart]);
