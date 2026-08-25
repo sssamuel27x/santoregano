@@ -115,7 +115,7 @@ export default function Order() {
         const duration = Math.max(1, Math.ceil(routeData.routes[0].duration / 60));
         const quote = distance > 25
           ? { status: 'outside', distance, duration, fee: 0, displayName: locations[0].display_name }
-          : { status: 'success', distance, duration, fee: 1 + Math.floor(distance / 3), displayName: locations[0].display_name };
+          : { status: 'success', distance, duration, fee: 0.9 + Math.floor(distance / 3) * 0.9, displayName: locations[0].display_name };
 
         saveDeliveryQuote(cacheKey, quote);
         setDeliveryQuote(quote);
