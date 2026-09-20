@@ -19,7 +19,11 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
   const [crustId, setCrustId] = useState('');
   const [primaryChoiceId, setPrimaryChoiceId] = useState('');
   const [secondChoiceId, setSecondChoiceId] = useState('');
-  const secondFlavor = pizzas.find((pizza) => pizza.id === secondId) || null;
+  const canHalfAndHalf = size === 'large' && product.category !== 'sweet';
+  const eligibleSecondFlavors = pizzas.filter((pizza) => pizza.category !== 'sweet');
+  const secondFlavor = canHalfAndHalf
+    ? eligibleSecondFlavors.find((pizza) => pizza.id === secondId) || null
+    : null;
   const crust = stuffedCrusts.find((item) => item.id === crustId) || null;
   const primaryChoice = product.choice?.options.find((item) => item.id === primaryChoiceId) || null;
   const secondChoice = secondFlavor?.choice?.options.find((item) => item.id === secondChoiceId) || null;
@@ -94,16 +98,18 @@ function PizzaConfigurator({ product, size, pizzas, ordersOpen, onClose, onAdded
               <button className={!halfAndHalf ? 'selected' : ''} type="button" onClick={() => { setHalfAndHalf(false); setSecondId(''); }}>
                 <span>●</span><b>{t('menu.wholePizza')}</b><small>{displayProduct.name}</small>
               </button>
-              <button className={halfAndHalf ? 'selected' : ''} type="button" onClick={() => setHalfAndHalf(true)}>
-                <span>◐</span><b>{t('menu.halfHalf')}</b><small>{t('menu.combine')}</small>
-              </button>
+              {canHalfAndHalf && (
+                <button className={halfAndHalf ? 'selected' : ''} type="button" onClick={() => setHalfAndHalf(true)}>
+                  <span>◐</span><b>{t('menu.halfHalf')}</b><small>{t('menu.combine')}</small>
+                </button>
+              )}
             </div>
             {halfAndHalf && (
               <label className="pizza-second-flavor">
                 {t('menu.secondFlavor')}
                 <select value={secondId} onChange={(event) => setSecondId(event.target.value)} autoFocus>
                   <option value="">{t('menu.chooseOtherHalf')}</option>
-                  {pizzas.filter((pizza) => pizza.id !== product.id).map((pizza) => (
+                  {eligibleSecondFlavors.filter((pizza) => pizza.id !== product.id).map((pizza) => (
                     <option key={pizza.id} value={pizza.id}>{translateProduct(pizza, language).name} · {euro(pizza.sizes[size].price)}</option>
                   ))}
                 </select>

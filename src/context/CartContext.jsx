@@ -45,6 +45,10 @@ export function CartProvider({ children }) {
             changed = true;
             return [];
           }
+          if (secondary && (sizeKey !== 'large' || primary.category === 'sweet' || secondary.category === 'sweet')) {
+            changed = true;
+            return [];
+          }
 
           const primaryChoice = primary.choice?.options.find((option) => option.id === primaryChoiceId) || null;
           const secondaryChoice = secondary?.choice?.options.find((option) => option.id === secondaryChoiceId) || null;
@@ -139,27 +143,32 @@ export function CartProvider({ children }) {
     price,
   }) => {
     const selected = product.sizes[size];
+    const allowedSecondFlavor = size === 'large'
+      && product.category !== 'sweet'
+      && secondFlavor?.category !== 'sweet'
+      ? secondFlavor
+      : null;
     const configuredFlavors = [
       `${product.id}:${primaryChoice?.id || 'standard'}`,
-      ...(secondFlavor ? [`${secondFlavor.id}:${secondChoice?.id || 'standard'}`] : []),
+      ...(allowedSecondFlavor ? [`${allowedSecondFlavor.id}:${secondChoice?.id || 'standard'}`] : []),
     ].sort();
     const id = `pizza-${configuredFlavors.join('+')}-${size}-${crust?.id || 'sem-rebordo'}`;
     const primaryName = `${product.name}${primaryChoice ? ` (${primaryChoice.name})` : ''}`;
-    const secondName = secondFlavor
-      ? `${secondFlavor.name}${secondChoice ? ` (${secondChoice.name})` : ''}`
+    const secondName = allowedSecondFlavor
+      ? `${allowedSecondFlavor.name}${secondChoice ? ` (${secondChoice.name})` : ''}`
       : '';
     const item = {
       id,
       productId: product.id,
-      name: secondFlavor ? `½ ${primaryName} + ½ ${secondName}` : primaryName,
+      name: allowedSecondFlavor ? `½ ${primaryName} + ½ ${secondName}` : primaryName,
       category: 'pizza',
       imageUrl: menuImage(product),
       size: selected.label,
       crust: crust?.name || null,
-      price,
+      price: allowedSecondFlavor ? price : roundCurrency(selected.price + (crust?.price || 0)),
       configuration: {
         primaryId: product.id,
-        secondaryId: secondFlavor?.id || null,
+        secondaryId: allowedSecondFlavor?.id || null,
         sizeKey: size,
         crustId: crust?.id || null,
         primaryChoiceId: primaryChoice?.id || null,

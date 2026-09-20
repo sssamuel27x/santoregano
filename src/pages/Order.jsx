@@ -11,9 +11,10 @@ const WHATSAPP_NUMBER = '351926965965';
 const RESTAURANT = { lat: 40.5725835, lon: -8.4454473, label: 'Praça Conde de Águeda' };
 const GEOCODING_URL = 'https://nominatim.openstreetmap.org/search';
 const ROUTING_URL = 'https://router.project-osrm.org/route/v1/driving';
-const DELIVERY_CACHE_KEY = 'santoregano-delivery-cache-v2';
+const DELIVERY_CACHE_KEY = 'santoregano-delivery-cache-v3';
 const CACHE_LIFETIME = 7 * 24 * 60 * 60 * 1000;
 const EMPTY_QUOTE = { status: 'idle', distance: 0, duration: 0, fee: 0, displayName: '' };
+const deliveryFeeForDistance = (distance) => 2 + Math.max(0, Math.ceil(distance - 1)) * 0.5;
 
 function readDeliveryCache() {
   try {
@@ -52,7 +53,7 @@ export default function Order() {
   const [deliveryQuote, setDeliveryQuote] = useState(EMPTY_QUOTE);
 
   const deliveryFee = fulfilment === 'delivery'
-    ? deliveryQuote.status === 'success' ? deliveryQuote.fee : deliveryQuote.status === 'outside' ? 0 : 0.9
+    ? deliveryQuote.status === 'success' ? deliveryQuote.fee : deliveryQuote.status === 'outside' ? 0 : 2
     : 0;
   const total = subtotal + deliveryFee;
   const grouped = useMemo(() => cart.map((item) => ({ ...item, lineTotal: item.price * item.quantity })), [cart]);
@@ -113,9 +114,9 @@ export default function Order() {
 
         const distance = routeData.routes[0].distance / 1000;
         const duration = Math.max(1, Math.ceil(routeData.routes[0].duration / 60));
-        const quote = distance > 25
+        const quote = distance > 15
           ? { status: 'outside', distance, duration, fee: 0, displayName: locations[0].display_name }
-          : { status: 'success', distance, duration, fee: 0.9 + Math.floor(distance) * 0.9, displayName: locations[0].display_name };
+          : { status: 'success', distance, duration, fee: deliveryFeeForDistance(distance), displayName: locations[0].display_name };
 
         saveDeliveryQuote(cacheKey, quote);
         setDeliveryQuote(quote);
